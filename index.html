@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>UNIFY Case Review</title>
-<meta name="description" content="Review 15 short code-change cases for the UNIFY final-year project. About 40 minutes, no setup.">
+<meta name="description" content="Review 3 short code-change cases for the UNIFY final-year project. About 5 minutes, works on a phone.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
@@ -117,6 +117,9 @@ pre.code .h{color:var(--hunk)}
 .span .pick{display:flex;align-items:center;gap:8px;font-size:.875rem;font-weight:500;white-space:nowrap;cursor:pointer}
 .span .pick input{width:18px;height:18px;accent-color:var(--accent)}
 .span pre.code{max-height:340px;overflow:auto}
+.showcode{cursor:pointer;padding:6px 14px;font-size:.8125rem;color:var(--accent);border-top:1px solid var(--line);list-style:none}
+.showcode::-webkit-details-marker{display:none}
+@media (max-width:700px){.vkey{min-height:56px;padding:8px 10px 8px 40px}.vkey small{display:none}.answer .panel{border-color:var(--accent)}}
 pre.code .ln{color:var(--ink-3);display:inline-block;width:3.2em;user-select:none}
 .events{list-style:none;padding:0;margin:0}
 .events li{display:grid;grid-template-columns:22px 1fr;gap:8px;padding:8px 0;border-bottom:1px solid var(--line);font-size:.9rem}
@@ -171,8 +174,11 @@ dialog .inner{padding:20px 22px;max-height:80vh;overflow:auto}
 
 <script src="cases.js"></script>
 <script>
-const CASES = window.CASES || [];
-const MANUAL = "v1-web";
+const ALL = window.CASES || [];
+const MANUAL = "v1-web-b3";
+/* Five fixed groups of three. Each reviewer gets one group (random, or ?batch=N in the link). */
+const BATCHES = [["P01","P09","P15"],["P02","P14","P10"],["P08","P05","P13"],["P12","P04","P11"],["P03","P06","P07"]];
+let CASES = [];
 const VERDICTS = [
   {key:"1", id:"SUPPORTED", name:"Supported", c:"var(--sup)",
    short:"Every part is done, and a passing test shows it",
@@ -207,9 +213,19 @@ const KEY = "unify-annotation-v1";
 function load(){ try{ return JSON.parse(localStorage.getItem(KEY)) || null }catch(e){ return null } }
 function save(){ try{ localStorage.setItem(KEY, JSON.stringify(S)) }catch(e){} }
 let S = load() || {screen:"welcome", profile:{name:"",role:"",years:"",consent:false}, answers:{}, idx:0, startedAt:null};
+(function assign(){
+  const q = parseInt(new URLSearchParams(location.search).get("batch"),10);
+  if(q>=1 && q<=BATCHES.length && S.batch!==q && !Object.keys(S.answers).length){ S.batch=q; S.order=null; }
+  if(!S.batch) S.batch = 1 + Math.floor(Math.random()*BATCHES.length);
+  if(!S.order){ const o = BATCHES[S.batch-1].slice(); for(let i=o.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[o[i],o[j]]=[o[j],o[i]];} S.order=o; }
+  if(!S.rid) S.rid = "R-" + Math.random().toString(36).slice(2,7).toUpperCase();
+  CASES = S.order.map(id=>ALL.find(c=>c.id===id)).filter(Boolean);
+  save();
+})();
 let tick = null;
 
 const $ = (s,el=document)=>el.querySelector(s);
+const PHONE = ()=>window.matchMedia("(max-width:700px)").matches;
 const esc = s => String(s).replace(/[&<>"]/g, m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[m]));
 function go(screen){ S.screen = screen; save(); render(); window.scrollTo(0,0); }
 
@@ -245,12 +261,12 @@ function welcome(){
   const resumed = Object.keys(S.answers).length;
   return `<div class="narrow">
     <h1>Did this code change do what it promised?</h1>
-    <p class="lede">You'll look at 15 real changes from open-source React projects (react-hook-form, excalidraw, mantine). For each one, decide whether the code meets a single stated requirement.</p>
+    <p class="lede">You'll look at 3 real changes from open-source React projects (react-hook-form, excalidraw, mantine). For each one, decide whether the code meets a single stated requirement.</p>
     <p class="muted">This is for <b>UNIFY</b>, a final-year project at FAST-NUCES Islamabad that checks pull requests against their tickets. Your answers help us test whether our labelling rules are clear enough for engineers to agree on.</p>
     <div class="facts">
-      <div><b>15 cases</b><span class="muted small">2–3 minutes each</span></div>
+      <div><b>3 cases</b><span class="muted small">About 5 minutes in total</span></div>
       <div><b>No setup</b><span class="muted small">All the code is on the page</span></div>
-      <div><b>Saves as you go</b><span class="muted small">In this browser. Come back any time</span></div>
+      <div><b>Works on your phone</b><span class="muted small">Saves as you go</span></div>
     </div>
     <p class="muted small">There are no trick questions and no "right" answer you're expected to guess. We want your honest engineering judgement. Please don't discuss cases with other reviewers until you've sent your answers.</p>
     <div class="row">
@@ -262,19 +278,19 @@ function welcome(){
 function profile(){
   const p = S.profile;
   return `<div class="narrow"><h1>About you</h1>
-    <p class="lede">So we can describe our reviewers in the report. Your name won't be published.</p>
-    <label class="field"><span>Name or initials</span><input type="text" id="pName" value="${esc(p.name)}" autocomplete="name"></label>
-    <label class="field"><span>Your role</span><input type="text" id="pRole" value="${esc(p.role)}" placeholder="e.g. Frontend engineer, QA lead"></label>
-    <label class="field"><span>Years of professional software experience</span><input type="number" min="0" max="60" id="pYears" value="${esc(p.years)}"></label>
+    <p class="lede">So we know who reviewed each case and can describe our reviewers in the report.</p>
+    <label class="field"><span>Your name</span><input type="text" id="pName" value="${esc(p.name)}" autocomplete="name"></label>
+    <label class="field"><span>Your role <span class="muted small">(optional)</span></span><input type="text" id="pRole" value="${esc(p.role)}" placeholder="e.g. Frontend engineer, QA lead"></label>
+    <label class="field"><span>Years of professional software experience <span class="muted small">(optional)</span></span><input type="number" min="0" max="60" id="pYears" value="${esc(p.years)}"></label>
     <label class="check"><input type="checkbox" id="pConsent" ${p.consent?"checked":""}>
-      <span>I'm happy for my answers to be used, anonymously, in the UNIFY project report and dataset.</span></label>
+      <span>I'm happy for my answers to be used in the UNIFY project report and dataset.</span></label>
     <div class="err" id="pErr"></div>
     <div class="row"><button class="btn" onclick="go('guide')">Back</button>
       <button class="btn primary" onclick="saveProfile()">Start the cases</button></div></div>`;
 }
 function saveProfile(){
   const p = {name:$("#pName").value.trim(), role:$("#pRole").value.trim(), years:$("#pYears").value.trim(), consent:$("#pConsent").checked};
-  if(!p.name){ $("#pErr").textContent="Add a name or initials so we can tell reviewers apart."; return; }
+  if(!p.name){ $("#pErr").textContent="Please enter your name."; $("#pName").focus(); return; }
   if(!p.consent){ $("#pErr").textContent="Tick the consent box to continue."; return; }
   S.profile = p; if(!S.startedAt) S.startedAt = new Date().toISOString(); go("case");
 }
@@ -284,7 +300,7 @@ function diffBlock(d){
   const lines = d.lines.map(l=>{
     const cls = l.startsWith("+")?"a":l.startsWith("-")?"d":l.startsWith("@@")?"h":"";
     return `<span class="${cls}">${esc(l)||" "}</span>`;}).join("");
-  return `<details class="file" ${d.kind==="code"?"open":""}><summary><span class="fname">${esc(d.file)}</span>
+  return `<details class="file" ${d.kind==="code"&&!PHONE()?"open":""}><summary><span class="fname">${esc(d.file)}</span>
     <span class="tag">${d.kind==="test"?"test":"code"}</span></summary>
     <pre class="code">${lines}</pre>${d.truncated?`<div class="note">Showing the first ${d.lines.length} of ${d.total} lines.</div>`:""}</details>`;
 }
@@ -293,7 +309,7 @@ function spanBlock(s, picked){
   return `<section class="span ${picked?"on":""}" data-span="${s.id}">
     <header><div style="flex:1;min-width:0"><h3>${esc(s.symbol)}</h3><div class="fname">${esc(s.file)} · lines ${s.start}–${s.end}</div></div>
       <label class="pick"><input type="checkbox" ${picked?"checked":""} onchange="toggleSpan('${s.id}',this.checked)"> Matters</label></header>
-    <pre class="code">${lines}</pre></section>`;
+    <details ${PHONE()?"":"open"}><summary class="showcode">${PHONE()?"Show code":"Hide code"}</summary><pre class="code">${lines}</pre></details></section>`;
 }
 function testChip(r){
   const u = r.toUpperCase();
@@ -306,7 +322,7 @@ function renderCase(){
   const i = Math.min(S.idx, CASES.length-1), c = CASES[i];
   const a = S.answers[c.id] || {verdict:"", reason:"", freshness:"CURRENT", spans:[], note:"", seconds:0};
   S.answers[c.id] = a;
-  const done = CASES.filter(x=>S.answers[x.id] && S.answers[x.id].verdict && S.answers[x.id].note).length;
+  const done = CASES.filter(x=>complete(x.id)).length;
   $("#app").innerHTML = `
   <div class="top"><div class="wrap">
     <span class="brand">UNIFY review</span>
@@ -331,7 +347,7 @@ function renderCase(){
       <div class="sec"><h3>What changed</h3><span class="muted">Base → evaluated commit</span></div>
       ${c.diff.length?c.diff.map(diffBlock).join(""):`<div class="panel note">No files changed.</div>`}
 
-      <div class="sec"><h3>Code to consider</h3><span class="muted">Tick each snippet that matters for the requirement</span></div>
+      <div class="sec"><h3>Code to consider</h3><span class="muted">Optional: tick the snippets that matter for the requirement</span></div>
       ${c.spans.map(s=>spanBlock(s, a.spans.includes(s.id))).join("")}
 
       <div class="sec"><h3>Events</h3><span class="muted">In the order they were received</span></div>
@@ -356,7 +372,7 @@ function renderCase(){
       <div class="seg" role="radiogroup" aria-label="Source freshness">${[["CURRENT","Yes"],["STALE","No, it's stale"],["UNKNOWN","Can't tell"]].map(f=>`
         <label><input type="radio" name="fresh" value="${f[0]}" ${a.freshness===f[0]?"checked":""} onchange="setField('freshness',this.value)"><span>${f[1]}</span></label>`).join("")}</div>
 
-      <label class="field" style="margin-bottom:4px"><span class="small">Why? One sentence naming the test or code you relied on</span>
+      <label class="field" style="margin-bottom:4px"><span class="small">Why? <span class="muted">(optional, but it really helps us)</span></span>
         <textarea id="note" oninput="setField('note',this.value)" placeholder="e.g. The added test fails because the reset still emits the old name.">${esc(a.note)}</textarea></label>
       <div class="err" id="cErr"></div>
       <div class="nav">
@@ -384,7 +400,6 @@ function move(d){
   if(d>0){
     if(!a.verdict) return $("#cErr").textContent="Pick one of the four answers.";
     if(a.verdict==="INSUFFICIENT_EVIDENCE" && !a.reason) return $("#cErr").textContent="Choose the main reason you can't tell.";
-    if((a.note||"").trim().length<10) return $("#cErr").textContent="Add one short sentence saying why.";
   }
   if(d>0 && S.idx===CASES.length-1) return go("finish");
   S.idx = Math.max(0, Math.min(CASES.length-1, S.idx+d)); save(); renderCase(); window.scrollTo(0,0);
@@ -396,10 +411,10 @@ document.addEventListener("keydown", e=>{
 });
 
 /* ---------- finish + export ---------- */
-function complete(id){ const a=S.answers[id]; return a && a.verdict && (a.note||"").trim().length>=10 && (a.verdict!=="INSUFFICIENT_EVIDENCE"||a.reason); }
+function complete(id){ const a=S.answers[id]; return a && a.verdict && (a.verdict!=="INSUFFICIENT_EVIDENCE"||a.reason); }
 function finish(){
   const n = CASES.filter(c=>complete(c.id)).length;
-  return `<div class="narrow"><h1>${n===CASES.length?"All 15 cases done. Thank you.":`${n} of ${CASES.length} cases done`}</h1>
+  return `<div class="narrow"><h1>${n===CASES.length?"All done. Thank you!":`${n} of ${CASES.length} cases done`}</h1>
     <p class="lede">${n===CASES.length?"Send your answers to the UNIFY team using one of the buttons below.":"You can send what you have, or finish the rest first. Unfinished cases are left blank."}</p>
     <div class="status-list">${CASES.map((c,k)=>`<button class="${complete(c.id)?"done":""}" onclick="S.idx=${k};go('case')" aria-label="Case ${k+1}${complete(c.id)?", done":""}">${c.id}</button>`).join("")}</div>
     <div class="panel">
@@ -411,18 +426,18 @@ function finish(){
     <p class="small muted" style="margin-top:24px">Changed your mind? Click any case above to revisit it. Your answers stay saved in this browser.</p></div>`;
 }
 function csv(){
-  const head = ["case_id","annotator","manual_version","started_at","verdict","freshness_state","review_required","reason_code","relevant_span_ids","justification","minutes_spent","annotator_role","years_experience","annotator_type"];
+  const head = ["case_id","annotator","manual_version","started_at","verdict","freshness_state","review_required","reason_code","relevant_span_ids","justification","minutes_spent","annotator_role","years_experience","annotator_type","batch","reviewer_id"];
   const q = v => { v = String(v??""); return /[",\n]/.test(v) ? `"${v.replace(/"/g,'""')}"` : v; };
   const rows = CASES.map(c=>{
     const a = S.answers[c.id] || {}; const ok = complete(c.id);
     const review = ok ? (a.verdict==="PARTIAL"||a.verdict==="INSUFFICIENT_EVIDENCE"||a.freshness!=="CURRENT") : "";
-    return [c.id, S.profile.name, MANUAL, S.startedAt||"", ok?a.verdict:"", ok?a.freshness:"", ok?String(review):"",
+    return [c.id, S.profile.name || S.rid, MANUAL, S.startedAt||"", ok?a.verdict:"", ok?a.freshness:"", ok?String(review):"",
       ok?(a.reason||""):"", ok?(a.spans||[]).slice().sort().join(";"):"", ok?(a.note||"").trim():"",
-      ok?Math.max(1,Math.round((a.seconds||0)/60)):"", S.profile.role, S.profile.years, "external"].map(q).join(",");
+      ok?Math.max(1,Math.round((a.seconds||0)/60)):"", S.profile.role, S.profile.years, "external", S.batch, S.rid].map(q).join(",");
   });
   return head.join(",")+"\n"+rows.join("\n")+"\n";
 }
-function fname(){ const n=(S.profile.name||"reviewer").replace(/[^a-z0-9]+/gi,"_").toLowerCase(); return `unify_annotations_${n}_${new Date().toISOString().slice(0,10)}.csv`; }
+function fname(){ const n=(S.profile.name||S.rid).replace(/[^a-z0-9]+/gi,"_").toLowerCase(); return `unify_annotations_${n}_${new Date().toISOString().slice(0,10)}.csv`; }
 function downloadCsv(){
   const url = URL.createObjectURL(new Blob([csv()],{type:"text/csv"}));
   const a = document.createElement("a"); a.href=url; a.download=fname(); document.body.appendChild(a); a.click(); a.remove();

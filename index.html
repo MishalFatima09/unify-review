@@ -1,0 +1,438 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>UNIFY Case Review</title>
+<meta name="description" content="Review 15 short code-change cases for the UNIFY final-year project. About 40 minutes, no setup.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#EEF1F4; --surface:#FFFFFF; --sunk:#F6F8FA; --ink:#17202B; --ink-2:#4A5563; --ink-3:#7A8594;
+  --line:#D6DCE3; --accent:#3443B8; --accent-ink:#FFFFFF; --focus:#3443B8;
+  --sup:#2F7D4E; --con:#B4372F; --par:#A9690F; --ins:#5B6670;
+  --add-bg:#E6F4EA; --add-ink:#1D5E36; --del-bg:#FBE9E7; --del-ink:#8E2A22; --hunk:#5B6670;
+  --shadow:0 1px 2px rgba(23,32,43,.06),0 4px 16px rgba(23,32,43,.06);
+  --sans:"IBM Plex Sans",system-ui,sans-serif; --mono:"IBM Plex Mono",ui-monospace,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#12161C; --surface:#1A2029; --sunk:#151A21; --ink:#E6EAF0; --ink-2:#AAB4C1; --ink-3:#7E8896;
+  --line:#2C3542; --accent:#8C9BFF; --accent-ink:#0E1220; --focus:#8C9BFF;
+  --sup:#5DBB84; --con:#EF7B70; --par:#E0A64A; --ins:#9AA5B2;
+  --add-bg:#163322; --add-ink:#9BE0B4; --del-bg:#3A1B19; --del-ink:#F3B1A9; --hunk:#8B96A4;
+  --shadow:none;
+}}
+:root[data-theme="dark"]{
+  --bg:#12161C; --surface:#1A2029; --sunk:#151A21; --ink:#E6EAF0; --ink-2:#AAB4C1; --ink-3:#7E8896;
+  --line:#2C3542; --accent:#8C9BFF; --accent-ink:#0E1220; --focus:#8C9BFF;
+  --sup:#5DBB84; --con:#EF7B70; --par:#E0A64A; --ins:#9AA5B2;
+  --add-bg:#163322; --add-ink:#9BE0B4; --del-bg:#3A1B19; --del-ink:#F3B1A9; --hunk:#8B96A4;
+  --shadow:none;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font:400 16px/1.55 var(--sans);-webkit-font-smoothing:antialiased}
+a{color:var(--accent)}
+button,input,select,textarea{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--focus);outline-offset:2px;border-radius:4px}
+.wrap{max-width:1180px;margin:0 auto;padding:0 16px}
+.narrow{max-width:680px;margin:0 auto;padding:40px 16px 64px}
+h1{font-size:2rem;line-height:1.2;font-weight:600;margin:0 0 12px;letter-spacing:-.01em}
+h2{font-size:1.25rem;font-weight:600;margin:32px 0 10px}
+h3{font-size:1rem;font-weight:600;margin:0 0 6px}
+p{margin:0 0 14px}
+.muted{color:var(--ink-2)}
+.small{font-size:.875rem}
+.btn{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--line);background:var(--surface);
+  padding:10px 18px;border-radius:8px;cursor:pointer;font-weight:500}
+.btn:hover{border-color:var(--ink-3)}
+.btn.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.btn.primary:hover{filter:brightness(1.07)}
+.btn[disabled]{opacity:.45;cursor:not-allowed}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:20px;box-shadow:var(--shadow)}
+/* ---------- welcome / guide ---------- */
+.lede{font-size:1.125rem;color:var(--ink-2);margin-bottom:24px}
+.facts{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:24px 0}
+.facts div{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:14px}
+.facts b{display:block;font-size:1.25rem}
+.verdict-table{display:grid;gap:10px;margin:16px 0}
+.vrow{display:grid;grid-template-columns:44px 1fr;gap:14px;background:var(--surface);border:1px solid var(--line);
+  border-radius:10px;padding:14px 16px;border-left:4px solid var(--c)}
+.vrow .key{width:36px;height:36px;border-radius:8px;border:1px solid var(--line);border-bottom-width:3px;
+  display:grid;place-items:center;font:500 1rem var(--mono);color:var(--c)}
+.vrow p{margin:2px 0 0;color:var(--ink-2);font-size:.9375rem}
+.rules{counter-reset:r;list-style:none;padding:0;margin:12px 0}
+.rules li{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:12px 16px;margin-bottom:8px}
+.rules b{display:block;margin-bottom:2px}
+label.field{display:block;margin-bottom:16px}
+label.field span{display:block;font-weight:500;margin-bottom:6px}
+input[type=text],input[type=number],select,textarea{width:100%;background:var(--surface);border:1px solid var(--line);
+  border-radius:8px;padding:10px 12px}
+textarea{min-height:84px;resize:vertical}
+.check{display:flex;gap:10px;align-items:flex-start;margin:12px 0}
+.check input{margin-top:5px;width:18px;height:18px;accent-color:var(--accent)}
+/* ---------- case screen ---------- */
+.top{position:sticky;top:0;z-index:5;background:var(--bg);border-bottom:1px solid var(--line)}
+.top .wrap{display:flex;align-items:center;gap:16px;height:56px}
+.brand{font-weight:600}
+.progress{flex:1;height:6px;background:var(--line);border-radius:3px;overflow:hidden}
+.progress i{display:block;height:100%;background:var(--accent);transition:width .3s}
+.count{font:500 .875rem var(--mono);color:var(--ink-2);white-space:nowrap}
+.linkbtn{background:none;border:0;color:var(--accent);cursor:pointer;padding:6px;font-weight:500}
+.case{display:grid;grid-template-columns:minmax(0,1fr) 360px;gap:24px;padding-top:24px;padding-bottom:64px;align-items:start}
+.req{overflow-wrap:anywhere;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:20px 22px;margin-bottom:16px;box-shadow:var(--shadow)}
+.req .q{font-size:1.25rem;line-height:1.45;font-weight:500;margin:4px 0 12px}
+.req .meta{font-size:.875rem;color:var(--ink-2)}
+.req .meta code{font:500 .8125rem var(--mono)}
+.sec{margin:22px 0 10px;display:flex;align-items:baseline;gap:10px}
+.sec h3{margin:0}
+.sec .muted{font-size:.875rem}
+.chip{display:inline-flex;align-items:center;gap:6px;font:500 .8125rem var(--sans);padding:3px 10px;border-radius:999px;border:1px solid var(--line);background:var(--surface)}
+.chip.pass{color:var(--sup);border-color:color-mix(in srgb,var(--sup) 40%,var(--line))}
+.chip.fail{color:var(--con);border-color:color-mix(in srgb,var(--con) 40%,var(--line))}
+.chip.none{color:var(--ins)}
+.test{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:12px 14px;margin-bottom:8px}
+.test code{display:block;font:.8125rem/1.5 var(--mono);color:var(--ink-2);overflow-wrap:anywhere;margin-top:6px}
+details.file{background:var(--surface);border:1px solid var(--line);border-radius:10px;margin-bottom:8px;overflow:hidden}
+details.file summary{cursor:pointer;padding:10px 14px;display:flex;gap:10px;align-items:center;list-style:none}
+details.file summary::-webkit-details-marker{display:none}
+details.file summary::before{content:"";width:8px;height:8px;border-right:2px solid var(--ink-3);border-bottom:2px solid var(--ink-3);transform:rotate(-45deg);transition:transform .15s}
+details.file[open] summary::before{transform:rotate(45deg)}
+.fname{font:500 .875rem var(--mono);overflow-wrap:anywhere;flex:1}
+.tag{font:500 .75rem var(--sans);padding:2px 8px;border-radius:6px;background:var(--sunk);color:var(--ink-2);border:1px solid var(--line)}
+pre.code{margin:0;padding:10px 0;background:var(--sunk);border-top:1px solid var(--line);overflow-x:auto;font:.8125rem/1.55 var(--mono)}
+pre.code span{display:block;padding:0 14px;white-space:pre;min-width:max-content}
+pre.code .a{background:var(--add-bg);color:var(--add-ink)}
+pre.code .d{background:var(--del-bg);color:var(--del-ink)}
+pre.code .h{color:var(--hunk)}
+.note{padding:10px 14px;font-size:.875rem;color:var(--ink-2)}
+.span{background:var(--surface);border:1px solid var(--line);border-radius:10px;margin-bottom:10px;overflow:hidden}
+.span.on{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent)}
+.span header{display:flex;gap:12px;align-items:center;padding:10px 14px}
+.span header .fname{font-size:.8125rem;color:var(--ink-2)}
+.span header h3{margin:0;font:600 .9375rem var(--mono)}
+.span .pick{display:flex;align-items:center;gap:8px;font-size:.875rem;font-weight:500;white-space:nowrap;cursor:pointer}
+.span .pick input{width:18px;height:18px;accent-color:var(--accent)}
+.span pre.code{max-height:340px;overflow:auto}
+pre.code .ln{color:var(--ink-3);display:inline-block;width:3.2em;user-select:none}
+.events{list-style:none;padding:0;margin:0}
+.events li{display:grid;grid-template-columns:22px 1fr;gap:8px;padding:8px 0;border-bottom:1px solid var(--line);font-size:.9rem}
+.events li:last-child{border-bottom:0}
+.events .n{font:500 .8125rem var(--mono);color:var(--ink-3)}
+/* answer panel */
+.answer{position:sticky;top:80px}
+.answer .panel{padding:18px}
+.answer h3{font-size:.9375rem;margin-bottom:10px}
+.keys{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px}
+.vkey{position:relative;text-align:left;border:1px solid var(--line);border-bottom-width:3px;border-radius:10px;
+  background:var(--surface);padding:10px 12px 10px 44px;cursor:pointer;min-height:64px;transition:transform .06s}
+.vkey:active{transform:translateY(1px)}
+.vkey .k{position:absolute;left:10px;top:10px;width:24px;height:24px;border-radius:6px;border:1px solid var(--line);
+  display:grid;place-items:center;font:500 .8125rem var(--mono);color:var(--c)}
+.vkey b{display:block;font-size:.9375rem;color:var(--c)}
+.vkey small{display:block;color:var(--ink-3);font-size:.75rem;line-height:1.35;margin-top:2px}
+.vkey[aria-pressed="true"]{border-color:var(--c);background:color-mix(in srgb,var(--c) 10%,var(--surface));box-shadow:inset 0 0 0 1px var(--c)}
+.seg{display:flex;border:1px solid var(--line);border-radius:8px;overflow:hidden;margin-bottom:14px}
+.seg label{flex:1;text-align:center;padding:7px 4px;font-size:.8125rem;cursor:pointer;border-right:1px solid var(--line);background:var(--surface)}
+.seg label:last-child{border-right:0}
+.seg input{position:absolute;opacity:0;pointer-events:none}
+.seg input:checked+span{font-weight:600;color:var(--accent)}
+.seg label:has(input:checked){background:color-mix(in srgb,var(--accent) 10%,var(--surface))}
+.seg label:has(input:focus-visible){outline:2px solid var(--focus);outline-offset:-2px}
+.err{color:var(--con);font-size:.8125rem;min-height:1.2em;margin:4px 0 8px}
+.nav{display:flex;gap:8px;justify-content:space-between;margin-top:6px}
+.saved{font-size:.75rem;color:var(--ink-3);margin-top:10px}
+/* guide drawer */
+dialog{border:1px solid var(--line);border-radius:14px;padding:0;max-width:640px;width:calc(100% - 32px);background:var(--bg);color:var(--ink)}
+dialog::backdrop{background:rgba(10,14,20,.45)}
+dialog .inner{padding:20px 22px;max-height:80vh;overflow:auto}
+/* finish */
+.status-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(64px,1fr));gap:8px;margin:16px 0 24px}
+.status-list button{border:1px solid var(--line);border-radius:8px;background:var(--surface);padding:8px 0;cursor:pointer;font:500 .875rem var(--mono)}
+.status-list button.done{border-color:var(--sup);color:var(--sup)}
+@media (max-width:900px){
+  .case{grid-template-columns:minmax(0,1fr)}
+  .top .brand{display:none}
+  .keys{grid-template-columns:1fr 1fr}
+  .answer{position:static}
+  .facts{grid-template-columns:1fr}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+[hidden]{display:none!important}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<dialog id="guideDlg"><div class="inner" id="guideInner"></div>
+  <div class="wrap" style="padding:0 22px 18px"><button class="btn" onclick="document.getElementById('guideDlg').close()">Close</button></div></dialog>
+
+<script src="cases.js"></script>
+<script>
+const CASES = window.CASES || [];
+const MANUAL = "v1-web";
+const VERDICTS = [
+  {key:"1", id:"SUPPORTED", name:"Supported", c:"var(--sup)",
+   short:"Every part is done, and a passing test shows it",
+   long:"The code does <b>every part</b> of the requirement, and you can see it works: a test that exercises it passes, or the code is so direct that no reviewer would doubt it."},
+  {key:"2", id:"CONTRADICTED", name:"Contradicted", c:"var(--con)",
+   short:"Evidence shows it is not done",
+   long:"The evidence shows the requirement is <b>not met</b>: a relevant test fails, or the code visibly does the opposite. Missing evidence is not a contradiction."},
+  {key:"3", id:"PARTIAL", name:"Partial", c:"var(--par)",
+   short:"Some parts done, some not, and you can say which",
+   long:"The requirement has parts. You can point to one that <b>works</b> and one that <b>doesn't</b>, with evidence for each."},
+  {key:"4", id:"INSUFFICIENT_EVIDENCE", name:"Can't tell", c:"var(--ins)",
+   short:"Not enough evidence to decide",
+   long:"You can't decide from what's shown: nothing tests the behaviour, the requirement's source is out of date, or the change doesn't touch the right code."},
+];
+const REASONS = [
+  ["MISSING_TEST","No test covers it"],
+  ["DYNAMIC_BEHAVIOUR","Depends on runtime / timing / visuals"],
+  ["SOURCE_STALE","The requirement source is out of date"],
+  ["AMBIGUOUS_LINK","The change doesn't touch the right code"],
+  ["AMBIGUOUS_CRITERION","The requirement is too vague"],
+  ["OTHER","Something else (say why)"],
+];
+const RULES = [
+  ["Judge the code, not the title.","A pull request title saying “fix” isn't evidence. Neither is the fact that it was merged."],
+  ["Timing and re-render claims need a test.","If the requirement is about React re-renders, timers or animation and nothing tests it, choose “Can't tell”, however convincing the code looks."],
+  ["Partial means you can name both halves.","Pick Partial only if you can say which part works and which part doesn't. If you just suspect something is missing, choose “Can't tell”."],
+  ["Code on the path counts.","Tick a code snippet if it's on the path that produces the behaviour, even if this change didn't edit it. Leave it unticked if it only looks similar."],
+];
+
+/* ---------- storage (best effort) ---------- */
+const KEY = "unify-annotation-v1";
+function load(){ try{ return JSON.parse(localStorage.getItem(KEY)) || null }catch(e){ return null } }
+function save(){ try{ localStorage.setItem(KEY, JSON.stringify(S)) }catch(e){} }
+let S = load() || {screen:"welcome", profile:{name:"",role:"",years:"",consent:false}, answers:{}, idx:0, startedAt:null};
+let tick = null;
+
+const $ = (s,el=document)=>el.querySelector(s);
+const esc = s => String(s).replace(/[&<>"]/g, m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[m]));
+function go(screen){ S.screen = screen; save(); render(); window.scrollTo(0,0); }
+
+/* ---------- guide content (shared by guide screen + drawer) ---------- */
+function guideHTML(){
+  return `
+  <h2 style="margin-top:0">Pick one of four answers</h2>
+  <div class="verdict-table">${VERDICTS.map(v=>`
+    <div class="vrow" style="--c:${v.c}"><div class="key">${v.key}</div>
+      <div><h3 style="color:${v.c}">${v.name}</h3><p>${v.long}</p></div></div>`).join("")}
+  </div>
+  <h2>Four rules that settle most cases</h2>
+  <ol class="rules">${RULES.map(r=>`<li><b>${r[0]}</b><span class="muted">${r[1]}</span></li>`).join("")}</ol>
+  <h2>What each case shows you</h2>
+  <p class="muted">The <b>requirement</b> at the top. <b>What changed</b>: the diff, with green for added lines and red for removed ones. The <b>test result</b>, from running the project's own tests on this exact code. A few <b>code snippets</b>: tick the ones that matter for the requirement. Some are deliberately similar-looking decoys.</p>`;
+}
+
+/* ---------- screens ---------- */
+function render(){
+  clearInterval(tick);
+  const app = $("#app");
+  if(S.screen==="welcome") app.innerHTML = welcome();
+  else if(S.screen==="guide") app.innerHTML = `<div class="narrow"><h1>How to judge a case</h1>
+      <p class="lede">Two minutes to read. You can reopen this from every case.</p>${guideHTML()}
+      <div class="row" style="margin-top:24px"><button class="btn" onclick="go('welcome')">Back</button>
+      <button class="btn primary" onclick="go('profile')">Continue</button></div></div>`;
+  else if(S.screen==="profile") app.innerHTML = profile();
+  else if(S.screen==="case") renderCase();
+  else if(S.screen==="finish") app.innerHTML = finish();
+}
+
+function welcome(){
+  const resumed = Object.keys(S.answers).length;
+  return `<div class="narrow">
+    <h1>Did this code change do what it promised?</h1>
+    <p class="lede">You'll look at 15 real changes from open-source React projects (react-hook-form, excalidraw, mantine). For each one, decide whether the code meets a single stated requirement.</p>
+    <p class="muted">This is for <b>UNIFY</b>, a final-year project at FAST-NUCES Islamabad that checks pull requests against their tickets. Your answers help us test whether our labelling rules are clear enough for engineers to agree on.</p>
+    <div class="facts">
+      <div><b>15 cases</b><span class="muted small">2–3 minutes each</span></div>
+      <div><b>No setup</b><span class="muted small">All the code is on the page</span></div>
+      <div><b>Saves as you go</b><span class="muted small">In this browser. Come back any time</span></div>
+    </div>
+    <p class="muted small">There are no trick questions and no "right" answer you're expected to guess. We want your honest engineering judgement. Please don't discuss cases with other reviewers until you've sent your answers.</p>
+    <div class="row">
+      <button class="btn primary" onclick="go('guide')">${resumed?"Review the guide":"Start"}</button>
+      ${resumed?`<button class="btn" onclick="go('case')">Continue where you left off (${resumed} of ${CASES.length} done)</button>`:""}
+    </div></div>`;
+}
+
+function profile(){
+  const p = S.profile;
+  return `<div class="narrow"><h1>About you</h1>
+    <p class="lede">So we can describe our reviewers in the report. Your name won't be published.</p>
+    <label class="field"><span>Name or initials</span><input type="text" id="pName" value="${esc(p.name)}" autocomplete="name"></label>
+    <label class="field"><span>Your role</span><input type="text" id="pRole" value="${esc(p.role)}" placeholder="e.g. Frontend engineer, QA lead"></label>
+    <label class="field"><span>Years of professional software experience</span><input type="number" min="0" max="60" id="pYears" value="${esc(p.years)}"></label>
+    <label class="check"><input type="checkbox" id="pConsent" ${p.consent?"checked":""}>
+      <span>I'm happy for my answers to be used, anonymously, in the UNIFY project report and dataset.</span></label>
+    <div class="err" id="pErr"></div>
+    <div class="row"><button class="btn" onclick="go('guide')">Back</button>
+      <button class="btn primary" onclick="saveProfile()">Start the cases</button></div></div>`;
+}
+function saveProfile(){
+  const p = {name:$("#pName").value.trim(), role:$("#pRole").value.trim(), years:$("#pYears").value.trim(), consent:$("#pConsent").checked};
+  if(!p.name){ $("#pErr").textContent="Add a name or initials so we can tell reviewers apart."; return; }
+  if(!p.consent){ $("#pErr").textContent="Tick the consent box to continue."; return; }
+  S.profile = p; if(!S.startedAt) S.startedAt = new Date().toISOString(); go("case");
+}
+
+function diffBlock(d){
+  if(d.omitted) return `<details class="file"><summary><span class="fname">${esc(d.file)}</span><span class="tag">not shown</span></summary><div class="note">${esc(d.note)}</div></details>`;
+  const lines = d.lines.map(l=>{
+    const cls = l.startsWith("+")?"a":l.startsWith("-")?"d":l.startsWith("@@")?"h":"";
+    return `<span class="${cls}">${esc(l)||" "}</span>`;}).join("");
+  return `<details class="file" ${d.kind==="code"?"open":""}><summary><span class="fname">${esc(d.file)}</span>
+    <span class="tag">${d.kind==="test"?"test":"code"}</span></summary>
+    <pre class="code">${lines}</pre>${d.truncated?`<div class="note">Showing the first ${d.lines.length} of ${d.total} lines.</div>`:""}</details>`;
+}
+function spanBlock(s, picked){
+  const lines = s.code.split("\n").map((l,i)=>`<span><i class="ln">${s.start+i}</i>${esc(l)||" "}</span>`).join("");
+  return `<section class="span ${picked?"on":""}" data-span="${s.id}">
+    <header><div style="flex:1;min-width:0"><h3>${esc(s.symbol)}</h3><div class="fname">${esc(s.file)} · lines ${s.start}–${s.end}</div></div>
+      <label class="pick"><input type="checkbox" ${picked?"checked":""} onchange="toggleSpan('${s.id}',this.checked)"> Matters</label></header>
+    <pre class="code">${lines}</pre></section>`;
+}
+function testChip(r){
+  const u = r.toUpperCase();
+  if(u.startsWith("PASS")) return `<span class="chip pass">Tests pass</span>`;
+  if(u.startsWith("FAIL")) return `<span class="chip fail">Tests fail</span>`;
+  return `<span class="chip none">No relevant test</span>`;
+}
+
+function renderCase(){
+  const i = Math.min(S.idx, CASES.length-1), c = CASES[i];
+  const a = S.answers[c.id] || {verdict:"", reason:"", freshness:"CURRENT", spans:[], note:"", seconds:0};
+  S.answers[c.id] = a;
+  const done = CASES.filter(x=>S.answers[x.id] && S.answers[x.id].verdict && S.answers[x.id].note).length;
+  $("#app").innerHTML = `
+  <div class="top"><div class="wrap">
+    <span class="brand">UNIFY review</span>
+    <div class="progress" aria-hidden="true"><i style="width:${done/CASES.length*100}%"></i></div>
+    <span class="count">Case ${i+1} of ${CASES.length}</span>
+    <button class="linkbtn" onclick="openGuide()">Guide</button>
+  </div></div>
+  <div class="wrap case">
+    <main>
+      <div class="req">
+        <span class="muted small">Requirement</span>
+        <p class="q">${esc(c.criterion)}</p>
+        <div class="meta">Change under review: <b>${esc(c.title)}</b><br>
+          Repository: <a href="${c.repoUrl}" target="_blank" rel="noopener">${esc(c.repo)}</a> · evaluated commit <code>${c.headSha.slice(0,10)}</code>${c.hasPatch?" (with a small patch applied; the code shown here is what you're judging)":""}
+          ${c.issueUrl?` · <a href="${c.issueUrl}" target="_blank" rel="noopener">original issue</a>`:""}</div>
+      </div>
+
+      <div class="sec"><h3>Test evidence</h3></div>
+      ${c.tests.map(t=>`<div class="test">${testChip(t.result)} <span class="small muted">${esc(t.result.replace(/^(PASS|FAIL|NOT_AVAILABLE)\s*/,""))}</span>
+        <code>${esc(t.command)}</code></div>`).join("")}
+
+      <div class="sec"><h3>What changed</h3><span class="muted">Base → evaluated commit</span></div>
+      ${c.diff.length?c.diff.map(diffBlock).join(""):`<div class="panel note">No files changed.</div>`}
+
+      <div class="sec"><h3>Code to consider</h3><span class="muted">Tick each snippet that matters for the requirement</span></div>
+      ${c.spans.map(s=>spanBlock(s, a.spans.includes(s.id))).join("")}
+
+      <div class="sec"><h3>Events</h3><span class="muted">In the order they were received</span></div>
+      <div class="panel" style="padding:6px 16px"><ul class="events">${c.events.map(e=>`
+        <li><span class="n">${e.delivered_order}</span><div><b>${esc(e.type)}</b> · ${esc(e.entity)} · <span class="muted">${esc(e.occurred_at)}</span>
+        ${e.evidence?`<div class="muted small">${esc(e.evidence)}</div>`:""}</div></li>`).join("")}</ul></div>
+    </main>
+
+    <aside class="answer"><div class="panel">
+      <h3>Your answer</h3>
+      <div class="keys" role="group" aria-label="Verdict">${VERDICTS.map(v=>`
+        <button class="vkey" style="--c:${v.c}" aria-pressed="${a.verdict===v.id}" onclick="setVerdict('${v.id}')">
+          <span class="k">${v.key}</span><b>${v.name}</b><small>${v.short}</small></button>`).join("")}</div>
+
+      <div id="reasonBox" ${a.verdict==="INSUFFICIENT_EVIDENCE"?"":"hidden"}>
+        <label class="field" style="margin-bottom:12px"><span class="small">Main reason you can't tell</span>
+        <select id="reason" onchange="setField('reason',this.value)"><option value="">Choose one…</option>
+          ${REASONS.map(r=>`<option value="${r[0]}" ${a.reason===r[0]?"selected":""}>${r[1]}</option>`).join("")}</select></label>
+      </div>
+
+      <span class="small" style="font-weight:500;display:block;margin-bottom:6px">Is the requirement's source up to date?</span>
+      <div class="seg" role="radiogroup" aria-label="Source freshness">${[["CURRENT","Yes"],["STALE","No, it's stale"],["UNKNOWN","Can't tell"]].map(f=>`
+        <label><input type="radio" name="fresh" value="${f[0]}" ${a.freshness===f[0]?"checked":""} onchange="setField('freshness',this.value)"><span>${f[1]}</span></label>`).join("")}</div>
+
+      <label class="field" style="margin-bottom:4px"><span class="small">Why? One sentence naming the test or code you relied on</span>
+        <textarea id="note" oninput="setField('note',this.value)" placeholder="e.g. The added test fails because the reset still emits the old name.">${esc(a.note)}</textarea></label>
+      <div class="err" id="cErr"></div>
+      <div class="nav">
+        <button class="btn" onclick="move(-1)" ${i===0?"disabled":""}>Back</button>
+        <button class="btn primary" onclick="move(1)">${i===CASES.length-1?"Finish":"Save and next"}</button>
+      </div>
+      <div class="saved">Keys 1–4 pick an answer. Your work is saved in this browser.</div>
+    </div></aside>
+  </div>`;
+  tick = setInterval(()=>{ if(!document.hidden){ a.seconds=(a.seconds||0)+5; save(); } }, 5000);
+}
+function cur(){ return S.answers[CASES[Math.min(S.idx,CASES.length-1)].id]; }
+function setVerdict(v){
+  const a = cur(); a.verdict = v; if(v!=="INSUFFICIENT_EVIDENCE") a.reason = ""; save();
+  document.querySelectorAll(".vkey").forEach((b,k)=>b.setAttribute("aria-pressed", VERDICTS[k].id===v));
+  $("#reasonBox").hidden = v!=="INSUFFICIENT_EVIDENCE"; $("#cErr").textContent="";
+}
+function setField(k,v){ cur()[k]=v; save(); }
+function toggleSpan(id,on){
+  const a = cur(); a.spans = a.spans.filter(x=>x!==id); if(on) a.spans.push(id); save();
+  document.querySelector(`[data-span="${id}"]`).classList.toggle("on", on);
+}
+function move(d){
+  const a = cur();
+  if(d>0){
+    if(!a.verdict) return $("#cErr").textContent="Pick one of the four answers.";
+    if(a.verdict==="INSUFFICIENT_EVIDENCE" && !a.reason) return $("#cErr").textContent="Choose the main reason you can't tell.";
+    if((a.note||"").trim().length<10) return $("#cErr").textContent="Add one short sentence saying why.";
+  }
+  if(d>0 && S.idx===CASES.length-1) return go("finish");
+  S.idx = Math.max(0, Math.min(CASES.length-1, S.idx+d)); save(); renderCase(); window.scrollTo(0,0);
+}
+function openGuide(){ $("#guideInner").innerHTML = guideHTML(); $("#guideDlg").showModal(); }
+document.addEventListener("keydown", e=>{
+  if(S.screen!=="case" || e.target.closest("input,textarea,select") || e.metaKey || e.ctrlKey || e.altKey) return;
+  const v = VERDICTS.find(x=>x.key===e.key); if(v){ e.preventDefault(); setVerdict(v.id); }
+});
+
+/* ---------- finish + export ---------- */
+function complete(id){ const a=S.answers[id]; return a && a.verdict && (a.note||"").trim().length>=10 && (a.verdict!=="INSUFFICIENT_EVIDENCE"||a.reason); }
+function finish(){
+  const n = CASES.filter(c=>complete(c.id)).length;
+  return `<div class="narrow"><h1>${n===CASES.length?"All 15 cases done. Thank you.":`${n} of ${CASES.length} cases done`}</h1>
+    <p class="lede">${n===CASES.length?"Send your answers to the UNIFY team using one of the buttons below.":"You can send what you have, or finish the rest first. Unfinished cases are left blank."}</p>
+    <div class="status-list">${CASES.map((c,k)=>`<button class="${complete(c.id)?"done":""}" onclick="S.idx=${k};go('case')" aria-label="Case ${k+1}${complete(c.id)?", done":""}">${c.id}</button>`).join("")}</div>
+    <div class="panel">
+      <h3>Send your answers</h3>
+      <p class="muted small">Download the file and send it to the person who shared this link, by email or WhatsApp. Or copy the answers and paste them into a message.</p>
+      <div class="row"><button class="btn primary" onclick="downloadCsv()">Download answers</button>
+        <button class="btn" onclick="copyCsv(this)">Copy answers</button></div>
+    </div>
+    <p class="small muted" style="margin-top:24px">Changed your mind? Click any case above to revisit it. Your answers stay saved in this browser.</p></div>`;
+}
+function csv(){
+  const head = ["case_id","annotator","manual_version","started_at","verdict","freshness_state","review_required","reason_code","relevant_span_ids","justification","minutes_spent","annotator_role","years_experience","annotator_type"];
+  const q = v => { v = String(v??""); return /[",\n]/.test(v) ? `"${v.replace(/"/g,'""')}"` : v; };
+  const rows = CASES.map(c=>{
+    const a = S.answers[c.id] || {}; const ok = complete(c.id);
+    const review = ok ? (a.verdict==="PARTIAL"||a.verdict==="INSUFFICIENT_EVIDENCE"||a.freshness!=="CURRENT") : "";
+    return [c.id, S.profile.name, MANUAL, S.startedAt||"", ok?a.verdict:"", ok?a.freshness:"", ok?String(review):"",
+      ok?(a.reason||""):"", ok?(a.spans||[]).slice().sort().join(";"):"", ok?(a.note||"").trim():"",
+      ok?Math.max(1,Math.round((a.seconds||0)/60)):"", S.profile.role, S.profile.years, "external"].map(q).join(",");
+  });
+  return head.join(",")+"\n"+rows.join("\n")+"\n";
+}
+function fname(){ const n=(S.profile.name||"reviewer").replace(/[^a-z0-9]+/gi,"_").toLowerCase(); return `unify_annotations_${n}_${new Date().toISOString().slice(0,10)}.csv`; }
+function downloadCsv(){
+  const url = URL.createObjectURL(new Blob([csv()],{type:"text/csv"}));
+  const a = document.createElement("a"); a.href=url; a.download=fname(); document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(()=>URL.revokeObjectURL(url), 2000);
+}
+async function copyCsv(btn){
+  try{ await navigator.clipboard.writeText(csv()); btn.textContent="Copied"; }
+  catch(e){ btn.textContent="Copy failed. Use Download instead"; }
+}
+render();
+</script>
+</body>
+</html>
